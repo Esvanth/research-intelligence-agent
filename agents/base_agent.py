@@ -13,12 +13,18 @@ class BaseAgent(ABC):
         self._client      = self._build_client()
 
     def _build_client(self):
-        project_client = AIProjectClient(
-            endpoint=config.FOUNDRY_PROJECT_ENDPOINT,
-            credential=DefaultAzureCredential(),
-        )
-        # Foundry IQ — returns an OpenAI-compatible client routed through the project
-        return project_client.get_openai_client()
+        if config.AZURE_API_KEY:
+            # API key auth for deployed environments (Render, etc.)
+            from openai import OpenAI
+            base_url = config.FOUNDRY_PROJECT_ENDPOINT.rstrip('/') + '/openai/v1'
+            return OpenAI(api_key=config.AZURE_API_KEY, base_url=base_url)
+        else:
+            # Local dev — requires az login
+            project_client = AIProjectClient(
+                endpoint=config.FOUNDRY_PROJECT_ENDPOINT,
+                credential=DefaultAzureCredential(),
+            )
+            return project_client.get_openai_client()
 
     def chat(self, user_message: str, extra_context: str = "") -> str:
         messages = [{"role": "system", "content": self.instructions}]
