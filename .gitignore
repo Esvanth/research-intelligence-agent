@@ -1,0 +1,34 @@
+# Environment & secrets — NEVER commit these
+.env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+
+# Keep frontend/dist (needed for Azure deployment)
+dist/
+!frontend/dist/
+!frontend/dist/**
+
+# Outputs (generated reports)
+outputs/
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

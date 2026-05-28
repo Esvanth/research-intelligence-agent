@@ -1,0 +1,12 @@
+azure-ai-projects
+azure-identity
+openai
+fastapi
+uvicorn[standard]
+gunicorn
+python-multipart
+requests
+beautifulsoup4
+aiohttp
+python-dotenv
+pydantic
