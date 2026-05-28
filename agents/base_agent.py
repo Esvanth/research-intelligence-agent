@@ -1,9 +1,11 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 import re
+from openai import AzureOpenAI
 from azure.ai.projects import AIProjectClient
 from azure.identity import DefaultAzureCredential
 import config
+
 
 class BaseAgent(ABC):
 
@@ -12,14 +14,17 @@ class BaseAgent(ABC):
         self.instructions = instructions
         self._client      = self._build_client()
 
-    def _build_client(self):
+    def _build_client(self) -> AzureOpenAI:
         if config.AZURE_API_KEY:
-            # API key auth for deployed environments (Render, etc.)
-            from openai import OpenAI
-            base_url = config.FOUNDRY_PROJECT_ENDPOINT.rstrip('/') + '/openai/v1'
-            return OpenAI(api_key=config.AZURE_API_KEY, base_url=base_url)
+            # API key auth — works locally and on any host (Render, etc.)
+            base_endpoint = config.FOUNDRY_PROJECT_ENDPOINT.split('/api/projects/')[0]
+            return AzureOpenAI(
+                api_key=config.AZURE_API_KEY,
+                azure_endpoint=base_endpoint,
+                api_version="2024-12-01-preview",
+            )
         else:
-            # Local dev — requires az login
+            # Fallback — requires az login locally or Managed Identity on Azure
             project_client = AIProjectClient(
                 endpoint=config.FOUNDRY_PROJECT_ENDPOINT,
                 credential=DefaultAzureCredential(),
@@ -34,6 +39,7 @@ class BaseAgent(ABC):
                 "content": f"Additional context:\n{extra_context}",
             })
         messages.append({"role": "user", "content": user_message})
+
         response = self._client.chat.completions.create(
             model=config.MODEL_DEPLOYMENT,
             messages=messages,
@@ -41,14 +47,8 @@ class BaseAgent(ABC):
             max_tokens=1500,
         )
         content = response.choices[0].message.content or ""
-        # Strip reasoning blocks emitted by thinking models (Phi-4-*-reasoning)
+        # Strip <think> blocks from Phi reasoning models
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
-        # If the model wrote "I'll produce..." style deliberation lines, keep only
-        # content after the last occurrence of a separator the model tends to use
-        for marker in ("Thus,", "Therefore,", "In summary,", "To summarize,"):
-            if marker in content:
-                content = content[content.rfind(marker):]
-                break
         return content.strip()
 
     @abstractmethod
