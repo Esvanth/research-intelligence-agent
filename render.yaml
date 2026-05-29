@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: research-intelligence-agent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: AZURE_AI_FOUNDRY_PROJECT_ENDPOINT
+        sync: false
+      - key: AZURE_AI_MODEL_DEPLOYMENT
+        value: gpt-4o
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: AZURE_CLIENT_ID
+        sync: false
+      - key: AZURE_CLIENT_SECRET
+        sync: false
+      - key: AZURE_TENANT_ID
+        sync: false

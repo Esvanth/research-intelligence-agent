@@ -50,7 +50,7 @@ FastAPI Backend  ─────────────────  Azure App 
 | Agent | Responsibility |
 |---|---|
 | **Orchestrator** | Coordinates pipeline, manages agent handoffs via Foundry IQ |
-| **Search Agent** | Uses Grounding with Bing Search to find sources |
+| **Search Agent** | Uses Tavily Search API to find real-time web sources |
 | **Reader Agent** | Fetches and extracts key facts from web pages |
 | **Fact-Check Agent** | Cross-references sources, detects contradictions |
 | **Synthesis Agent** | Produces final report with confidence-scored findings |
@@ -62,11 +62,11 @@ FastAPI Backend  ─────────────────  Azure App 
 | Technology | Role |
 |---|---|
 | **Azure AI Foundry** | Powers all 5 agents via Foundry IQ intelligence layer |
-| **Grounding with Bing Search** | Real-time web search for the Search Agent |
+| **Tavily Search API** | Real-time web search for the Search Agent |
 | **Azure App Service** | Hosts the FastAPI Python backend |
 | **Azure Static Web Apps** | Hosts the React frontend |
 | **Azure Managed Identity** | Passwordless authentication (DefaultAzureCredential) |
-| **Azure Developer CLI (azd)** | One-command deployment to Azure |
+| **Azure API Key auth** | Fallback for hosted environments without Managed Identity |
 
 ---
 
@@ -119,8 +119,9 @@ cp .env.example .env
 Your `.env` must contain:
 ```env
 AZURE_AI_FOUNDRY_PROJECT_ENDPOINT=https://YOUR-RESOURCE.services.ai.azure.com/api/projects/YOUR-PROJECT
+AZURE_API_KEY=your-azure-api-key
 AZURE_AI_MODEL_DEPLOYMENT=gpt-4o
-BING_CONNECTION_NAME=research-bing-grounding
+TAVILY_API_KEY=your-tavily-api-key
 ```
 
 ### Step 6 — Login to Azure

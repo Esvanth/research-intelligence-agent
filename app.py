@@ -136,9 +136,11 @@ if frontend_dist.exists():
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
+    import os
     try:
         config.validate_config()
     except EnvironmentError as e:
         print(f"[ERROR] {e}")
         exit(1)
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
