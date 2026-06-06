@@ -370,6 +370,38 @@
   letter-spacing: 0.01em;
 }
 
+/* ── PDF header (visible only in PDF output) ──────────────────────────────────── */
+.pdf-header {
+  display: none;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+.pdf-title { font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 0.3rem; }
+.pdf-query { font-size: 0.9rem; color: #374151; margin-bottom: 0.2rem; }
+.pdf-meta  { font-size: 0.72rem; color: #9ca3af; }
+
+/* When html2pdf renders, it applies its own styles — override report-body for PDF */
+.report-body.pdf-rendering,
+html2pdf__page .report-body {
+  background: #fff !important;
+  color: #111 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+.report-body.pdf-rendering .pdf-header { display: block; }
+.report-body.pdf-rendering h1,
+.report-body.pdf-rendering h2,
+.report-body.pdf-rendering h3 { color: #111 !important; border-color: #e5e7eb !important; }
+.report-body.pdf-rendering p,
+.report-body.pdf-rendering li { color: #374151 !important; }
+.report-body.pdf-rendering strong { color: #111 !important; }
+.report-body.pdf-rendering code  { background: #f3f4f6 !important; color: #4f46e5 !important; }
+.report-body.pdf-rendering blockquote { background: #f5f3ff !important; border-color: #6366f1 !important; color: #374151 !important; }
+.report-body.pdf-rendering a { color: #4f46e5 !important; border-color: #c7d2fe !important; }
+.report-body.pdf-rendering hr { border-color: #e5e7eb !important; }
+
 /* ── Responsive ───────────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .main             { padding: 2rem 1rem 5rem; gap: 2rem; }
