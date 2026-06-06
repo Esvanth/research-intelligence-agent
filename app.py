@@ -17,6 +17,10 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 import config
+from telemetry import setup_tracing
+
+# ── Tracing ───────────────────────────────────────────────────────────────────
+tracer = setup_tracing(config.APPINSIGHTS_CONNECTION_STR)
 
 # ── App setup ─────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -56,35 +60,37 @@ async def run_research(job_id: str, query: str):
     """Runs the full multi-agent pipeline in the background."""
     jobs[job_id]["status"] = "running"
 
-    try:
-        # Import here to avoid circular issues at startup
-        from agents.orchestrator import OrchestratorAgent
+    with tracer.start_as_current_span("research-pipeline") as span:
+        span.set_attribute("query", query)
+        span.set_attribute("job_id", job_id)
+        try:
+            from agents.orchestrator import OrchestratorAgent
 
-        def add_progress(msg: str):
-            jobs[job_id]["progress"].append(msg)
+            def add_progress(msg: str):
+                jobs[job_id]["progress"].append(msg)
+                span.add_event(msg)
 
-        add_progress("🔍 Search Agent: Finding relevant sources...")
-        orchestrator = OrchestratorAgent(progress_callback=add_progress)
+            add_progress("🔍 Search Agent: Finding relevant sources...")
+            orchestrator = OrchestratorAgent(progress_callback=add_progress)
 
-        # Run the pipeline (blocking — wrap in thread so FastAPI stays async)
-        loop = asyncio.get_event_loop()
-        report = await loop.run_in_executor(None, orchestrator.run, query)
+            loop = asyncio.get_event_loop()
+            report = await loop.run_in_executor(None, orchestrator.run, query)
 
-        # Save report to file
-        output_dir = Path("outputs")
-        output_dir.mkdir(exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_query = "".join(c if c.isalnum() else "_" for c in query[:40])
-        filepath = output_dir / f"report_{safe_query}_{timestamp}.md"
-        filepath.write_text(report, encoding="utf-8")
+            output_dir = Path("outputs")
+            output_dir.mkdir(exist_ok=True)
+            timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
+            safe_query = "".join(c if c.isalnum() else "_" for c in query[:40])
+            filepath   = output_dir / f"report_{safe_query}_{timestamp}.md"
+            filepath.write_text(report, encoding="utf-8")
 
-        jobs[job_id]["status"]  = "done"
-        jobs[job_id]["report"]  = report
-        add_progress("✅ Report ready!")
+            jobs[job_id]["status"] = "done"
+            jobs[job_id]["report"] = report
+            span.set_attribute("report_length", len(report))
 
-    except Exception as e:
-        jobs[job_id]["status"] = "error"
-        jobs[job_id]["error"]  = str(e)
+        except Exception as e:
+            span.record_exception(e)
+            jobs[job_id]["status"] = "error"
+            jobs[job_id]["error"]  = str(e)
 
 
 # ── API Routes ────────────────────────────────────────────────────────────────

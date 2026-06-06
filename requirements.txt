@@ -1,5 +1,9 @@
+azure-ai-inference
 azure-ai-projects
+azure-core
 azure-identity
+azure-monitor-opentelemetry
+opentelemetry-sdk
 openai
 fastapi
 uvicorn[standard]

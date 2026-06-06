@@ -52,6 +52,6 @@ class OrchestratorAgent:
 
         self._progress("📝 Synthesis Agent: Writing your report...")
         synthesis_output = self.synthesis_agent.run(factcheck_output)
-        self._progress("✅ All agents complete — report ready!")
+        self._progress("✅ Synthesis Agent: Report complete!")
 
         return synthesis_output["final_report"]

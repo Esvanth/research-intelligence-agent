@@ -12,67 +12,87 @@ const EXAMPLES = [
 ]
 
 const AGENTS = [
-  { id: 'search',    name: 'Search Agent',    icon: '🔍', desc: 'Discovers relevant sources',          keyword: 'Search'    },
-  { id: 'reader',    name: 'Reader Agent',    icon: '📖', desc: 'Extracts key information',            keyword: 'Reader'    },
-  { id: 'factcheck', name: 'Fact-Check Agent',icon: '🔎', desc: 'Cross-references & flags conflicts',  keyword: 'Fact'      },
-  { id: 'synthesis', name: 'Synthesis Agent', icon: '📝', desc: 'Builds confidence-scored report',     keyword: 'Synthesis' },
+  { id: 'search',    name: 'Search Agent',     keyword: 'Search',    desc: 'Discovers relevant sources' },
+  { id: 'reader',    name: 'Reader Agent',     keyword: 'Reader',    desc: 'Extracts key information'   },
+  { id: 'factcheck', name: 'Fact-Check Agent', keyword: 'Fact',      desc: 'Cross-references sources'   },
+  { id: 'synthesis', name: 'Synthesis Agent',  keyword: 'Synthesis', desc: 'Writes the final report'    },
 ]
 
 function agentState(steps, keyword) {
   if (steps.some(s => s.includes('✅') && s.includes(keyword))) return 'done'
-  if (steps.some(s => !s.includes('✅') && s.includes(keyword))) return 'running'
+  if (steps.some(s => !s.includes('✅') && s.includes(keyword))) return 'active'
   return 'idle'
 }
 
-// ── Header ────────────────────────────────────────────────────────────────────
+function agentDetail(steps, keyword) {
+  const done = steps.find(s => s.includes('✅') && s.includes(keyword))
+  if (done) return done.replace(/✅\s*/,'').replace(/\w+ Agent:\s*/,'').trim()
+  const active = steps.find(s => !s.includes('✅') && s.includes(keyword))
+  if (active) return active.replace(/[🔍📖🔎📝]\s*/,'').replace(/\w+ Agent:\s*/,'').trim()
+  return null
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────────
 function Header() {
   return (
     <header className="header">
-      <div className="header-glow" />
       <div className="header-inner">
-        <div className="brand">
-          <div className="brand-logo"><span>🧠</span></div>
-          <div>
-            <div className="brand-name">Research Intelligence</div>
-            <div className="brand-sub">Multi-Agent · Azure Foundry IQ · Agents League 2026</div>
+        <a className="brand" href="/">
+          <div className="brand-mark">
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="2.5" fill="currentColor"/>
+              <circle cx="3"  cy="3"  r="1.5" fill="currentColor" opacity="0.5"/>
+              <circle cx="17" cy="3"  r="1.5" fill="currentColor" opacity="0.5"/>
+              <circle cx="3"  cy="17" r="1.5" fill="currentColor" opacity="0.5"/>
+              <circle cx="17" cy="17" r="1.5" fill="currentColor" opacity="0.5"/>
+              <line x1="10" y1="10" x2="3"  y2="3"  stroke="currentColor" strokeWidth="1" opacity="0.35"/>
+              <line x1="10" y1="10" x2="17" y2="3"  stroke="currentColor" strokeWidth="1" opacity="0.35"/>
+              <line x1="10" y1="10" x2="3"  y2="17" stroke="currentColor" strokeWidth="1" opacity="0.35"/>
+              <line x1="10" y1="10" x2="17" y2="17" stroke="currentColor" strokeWidth="1" opacity="0.35"/>
+            </svg>
           </div>
-        </div>
-        <div className="header-tags">
-          <span className="tag tag-blue">Foundry IQ</span>
-          <span className="tag tag-purple">Reasoning Agents</span>
-          <span className="tag tag-teal">5 Agents</span>
+          <span className="brand-name">Research Intelligence</span>
+        </a>
+
+        <div className="header-right">
+          <span className="header-badge">Foundry IQ</span>
+          <span className="header-badge">Agents League 2026</span>
         </div>
       </div>
     </header>
   )
 }
 
-// ── Search ────────────────────────────────────────────────────────────────────
-function SearchPanel({ onSubmit, loading }) {
-  const [query, setQuery]     = useState('')
-  const [phIdx, setPhIdx]     = useState(0)
-  const inputRef              = useRef()
+// ── Search ─────────────────────────────────────────────────────────────────────
+function Search({ onSubmit, loading }) {
+  const [query, setQuery] = useState('')
+  const [phIdx, setPhIdx] = useState(0)
+  const inputRef          = useRef()
 
   useEffect(() => {
-    const id = setInterval(() => setPhIdx(i => (i + 1) % EXAMPLES.length), 3500)
-    return () => clearInterval(id)
+    const t = setInterval(() => setPhIdx(i => (i + 1) % EXAMPLES.length), 3200)
+    return () => clearInterval(t)
   }, [])
 
   const submit = () => { if (query.trim() && !loading) onSubmit(query.trim()) }
 
   return (
-    <section className="search-section">
+    <section className="search-wrap">
       <div className="search-hero">
-        <h2 className="search-title">
-          Ask anything. Get <span className="gradient-text">verified answers</span>.
-        </h2>
-        <p className="search-desc">
-          5 specialised AI agents search, read, fact-check, and synthesise
-          a confidence-scored research report — in seconds.
+        <h1 className="search-heading">
+          What do you want to research?
+        </h1>
+        <p className="search-sub">
+          4 AI agents work together to search the web, read sources,
+          fact-check claims, and write you a verified research report.
         </p>
       </div>
 
-      <div className="search-box">
+      <div className={`search-field ${loading ? 'disabled' : ''}`}>
+        <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
+          <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        </svg>
         <input
           ref={inputRef}
           className="search-input"
@@ -84,109 +104,122 @@ function SearchPanel({ onSubmit, loading }) {
           disabled={loading}
           autoFocus
         />
-        <button className="search-btn" onClick={submit} disabled={loading || !query.trim()}>
-          {loading ? <span className="spin" /> : '→'}
+        <button
+          className="search-submit"
+          onClick={submit}
+          disabled={loading || !query.trim()}
+          aria-label="Search"
+        >
+          {loading
+            ? <span className="spinner" />
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+          }
         </button>
       </div>
 
-      <div className="example-row">
-        <span className="example-label">Try:</span>
+      <div className="suggestions">
+        <span className="suggestions-label">Try asking</span>
         {EXAMPLES.map(ex => (
           <button
             key={ex}
-            className="example-pill"
-            onClick={() => { setQuery(ex); inputRef.current?.focus() }}
+            className="suggestion"
             disabled={loading}
-          >{ex}</button>
+            onClick={() => { setQuery(ex); inputRef.current?.focus() }}
+          >
+            {ex}
+          </button>
         ))}
       </div>
     </section>
   )
 }
 
-// ── How It Works (idle state) ─────────────────────────────────────────────────
-function HowItWorks() {
+// ── Features (idle state) ──────────────────────────────────────────────────────
+function Features() {
+  const items = [
+    { n: '01', title: 'Smart Search',     body: 'Searches the web and ranks sources by relevance to your question.' },
+    { n: '02', title: 'Deep Reading',     body: 'Opens and reads each source, pulling out the facts that matter.' },
+    { n: '03', title: 'Fact Checking',    body: 'Cross-references sources, finds agreements and contradictions.' },
+    { n: '04', title: 'Verified Report',  body: 'Synthesises everything into a confidence-scored, cited report.' },
+  ]
   return (
-    <div className="how-grid">
-      {AGENTS.map((a, i) => (
-        <div key={a.id} className="how-card">
-          <div className="how-step">Step {i + 1}</div>
-          <div className="how-icon">{a.icon}</div>
-          <h4>{a.name}</h4>
-          <p>{a.desc}</p>
-        </div>
-      ))}
+    <div className="features">
+      <p className="features-label">How it works</p>
+      <div className="features-grid">
+        {items.map(it => (
+          <div key={it.n} className="feature-card">
+            <span className="feature-num">{it.n}</span>
+            <h3 className="feature-title">{it.title}</h3>
+            <p className="feature-body">{it.body}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-// ── Agent Pipeline (running / done) ───────────────────────────────────────────
-function AgentPipeline({ steps, status }) {
-  const consoleRef = useRef()
-
-  useEffect(() => {
-    if (consoleRef.current) {
-      consoleRef.current.scrollTop = consoleRef.current.scrollHeight
-    }
-  }, [steps])
-
+// ── Research Progress ──────────────────────────────────────────────────────────
+function Progress({ query, steps, status }) {
   return (
-    <div className="pipeline-wrap">
-      <div className="pipeline-nodes">
-        {AGENTS.map((a, i) => {
-          const state = agentState(steps, a.keyword)
+    <div className="progress-wrap">
+      <div className="progress-header">
+        <div className="progress-label">
+          {status === 'running' ? 'Researching' : 'Researched'}
+        </div>
+        <div className="progress-query">"{query}"</div>
+      </div>
+
+      <div className="progress-steps">
+        {AGENTS.map((agent, i) => {
+          const state  = agentState(steps, agent.keyword)
+          const detail = agentDetail(steps, agent.keyword)
+
           return (
-            <div key={a.id} className="pipeline-item">
-              <div className={`agent-node ${state}`}>
-                <div className="node-icon">
-                  {state === 'running' ? <span className="spin" /> : state === 'done' ? '✓' : a.icon}
-                </div>
-                <div className="node-label">{a.name}</div>
-                <div className="node-desc">{a.desc}</div>
+            <div key={agent.id} className={`step ${state}`}>
+              <div className="step-indicator">
+                {state === 'done'
+                  ? <svg className="step-check" width="13" height="13" viewBox="0 0 14 14" fill="none">
+                      <path d="M2.5 7l3.5 3.5 5.5-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  : state === 'active'
+                  ? <span className="step-spinner" />
+                  : <span className="step-dot" />
+                }
               </div>
-              {i < AGENTS.length - 1 && (
-                <div className={`node-connector ${state === 'done' ? 'active' : ''}`}>
-                  <div className="connector-line" />
-                </div>
-              )}
+              <div className="step-content">
+                <span className="step-name">{agent.name}</span>
+                {detail && <span className="step-detail">{detail}</span>}
+                {!detail && state === 'idle' && (
+                  <span className="step-waiting">{agent.desc}</span>
+                )}
+              </div>
             </div>
           )
         })}
       </div>
 
-      <div className="console">
-        <div className="console-bar">
-          <span className="console-dot red" />
-          <span className="console-dot yellow" />
-          <span className="console-dot green" />
-          <span className="console-title">live agent output</span>
+      {status === 'running' && (
+        <div className="progress-note">
+          This usually takes 30–60 seconds
         </div>
-        <div className="console-body" ref={consoleRef}>
-          {steps.length === 0
-            ? <span className="console-line muted">Initialising agents...</span>
-            : steps.map((s, i) => (
-              <div key={i} className="console-line">
-                <span className="console-prompt">›</span>
-                <span>{s.replace(/^[^\s]+\s/, '')}</span>
-              </div>
-            ))
-          }
-          {status === 'running' && (
-            <div className="console-line muted">
-              <span className="console-prompt">›</span>
-              <span className="console-cursor" />
-            </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   )
 }
 
-// ── Report ────────────────────────────────────────────────────────────────────
-function ReportViewer({ report, query }) {
-  const copy = () => navigator.clipboard.writeText(report)
-  const dl   = () => {
+// ── Report ─────────────────────────────────────────────────────────────────────
+function Report({ report, query, onReset }) {
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(report)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const download = () => {
     const a = Object.assign(document.createElement('a'), {
       href:     URL.createObjectURL(new Blob([report], { type: 'text/markdown' })),
       download: `research-${Date.now()}.md`,
@@ -196,16 +229,31 @@ function ReportViewer({ report, query }) {
 
   return (
     <div className="report-wrap">
-      <div className="report-top">
-        <div>
-          <div className="report-title">Research Report</div>
-          <div className="report-query">"{query}"</div>
+      <div className="report-header">
+        <div className="report-header-left">
+          <div className="report-done-badge">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <path d="M2.5 7l3.5 3.5 5.5-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Done
+          </div>
+          <span className="report-header-query">"{query}"</span>
         </div>
-        <div className="report-btns">
-          <button className="btn-ghost" onClick={copy}>Copy</button>
-          <button className="btn-ghost" onClick={dl}>Download .md</button>
+        <div className="report-actions">
+          <button className="action-btn" onClick={copy}>
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <button className="action-btn" onClick={download}>
+            Download
+          </button>
+          <button className="action-btn action-btn-subtle" onClick={onReset}>
+            New research
+          </button>
         </div>
       </div>
+
+      <div className="report-divider" />
+
       <div className="report-body">
         <ReactMarkdown>{report}</ReactMarkdown>
       </div>
@@ -213,13 +261,13 @@ function ReportViewer({ report, query }) {
   )
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
+// ── App ────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [phase, setPhase]   = useState('idle')
-  const [steps, setSteps]   = useState([])
+  const [phase,  setPhase]  = useState('idle')
+  const [steps,  setSteps]  = useState([])
   const [report, setReport] = useState('')
-  const [query, setQuery]   = useState('')
-  const [error, setError]   = useState('')
+  const [query,  setQuery]  = useState('')
+  const [error,  setError]  = useState('')
   const pollRef             = useRef(null)
 
   const stop = () => { if (pollRef.current) clearInterval(pollRef.current) }
@@ -236,52 +284,48 @@ export default function App() {
       pollRef.current = setInterval(async () => {
         const job = await fetch(`${API}/research/${job_id}`).then(r => r.json())
         setSteps(job.progress || [])
-        if (job.status === 'done')  { stop(); setReport(job.report); setPhase('done') }
-        if (job.status === 'error') { stop(); setError(job.error || 'Unknown error'); setPhase('error') }
+        if (job.status === 'done')  { stop(); setReport(job.report); setPhase('done')  }
+        if (job.status === 'error') { stop(); setError(job.error  || 'Unknown error'); setPhase('error') }
       }, 2000)
     } catch (e) {
-      setError(e.message)
-      setPhase('error')
+      setError(e.message); setPhase('error')
     }
   }
 
-  const reset = () => { stop(); setPhase('idle'); setSteps([]); setReport(''); setQuery(''); setError('') }
+  const reset = () => {
+    stop(); setPhase('idle'); setSteps([]); setReport(''); setQuery(''); setError('')
+  }
 
   useEffect(() => () => stop(), [])
 
   return (
     <div className="app">
       <Header />
-      <main className="main">
-        <SearchPanel onSubmit={startResearch} loading={phase === 'running'} />
 
-        {phase === 'idle' && <HowItWorks />}
+      <main className="main">
+        <Search onSubmit={startResearch} loading={phase === 'running'} />
+
+        {phase === 'idle' && <Features />}
 
         {(phase === 'running' || phase === 'done') && (
-          <AgentPipeline steps={steps} status={phase} />
+          <Progress query={query} steps={steps} status={phase} />
         )}
 
         {phase === 'error' && (
-          <div className="error-card">
-            <div className="error-icon">⚠</div>
-            <h3>Something went wrong</h3>
-            <p>{error}</p>
-            <button className="btn-primary" onClick={reset}>Try Again</button>
+          <div className="error-box">
+            <p className="error-title">Something went wrong</p>
+            <p className="error-msg">{error}</p>
+            <button className="btn-primary" onClick={reset}>Try again</button>
           </div>
         )}
 
         {phase === 'done' && report && (
-          <>
-            <ReportViewer report={report} query={query} />
-            <div className="center-btn">
-              <button className="btn-ghost" onClick={reset}>Research another topic →</button>
-            </div>
-          </>
+          <Report report={report} query={query} onReset={reset} />
         )}
       </main>
 
       <footer className="footer">
-        Agents League Hackathon 2026 · Reasoning Agents Track · Powered by Azure AI Foundry
+        Built with Azure AI Foundry IQ · Tavily Search · Agents League Hackathon 2026
       </footer>
     </div>
   )
