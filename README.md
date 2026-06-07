@@ -203,10 +203,10 @@ research-intelligence-agent/
 ---
 
 ## 🎥 Demo Video
-[Link to be added on submission]
+Link : https://research-intelligence-agent.onrender.com/
 
 ---
 
 ## 👤 Author
-**Esvanth** | MSc Computing (AI), National College of Ireland  
+**Esvanth Mohankumar** | MSc Computing (AI), National College of Ireland,Dublin,Ireland  
 Agents League Hackathon 2026 | Reasoning Agents Track | Foundry IQ
