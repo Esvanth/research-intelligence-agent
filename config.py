@@ -10,6 +10,7 @@ TAVILY_API_KEY             = os.getenv("TAVILY_API_KEY", "")
 APPINSIGHTS_CONNECTION_STR = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING", "")
 MAX_SEARCH_RESULTS         = int(os.getenv("MAX_SEARCH_RESULTS", 5))
 MAX_AGENT_ITERATIONS       = int(os.getenv("MAX_AGENTS_ITERATIONS", 10))
+MAX_RESEARCH_ROUNDS        = int(os.getenv("MAX_RESEARCH_ROUNDS", 2))
 
 # Derive Foundry IQ inference endpoint from the project endpoint
 _base = FOUNDRY_PROJECT_ENDPOINT.split("/api/projects/")[0] if FOUNDRY_PROJECT_ENDPOINT else ""

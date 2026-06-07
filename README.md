@@ -36,12 +36,14 @@ FastAPI Backend  ─────────────────  Azure App 
 │       ORCHESTRATOR AGENT                │ ◄── Foundry IQ (Microsoft IQ Layer)
 └──────┬──────────┬──────────┬────────────┘
        ▼          ▼          ▼
-  Search      Reader     Fact-Check
-  Agent       Agent        Agent
-       └──────────┴──────────┘
-                  ▼
-           Synthesis Agent
-                  ▼
+  Search      Reader     Fact-Check ──┐
+  Agent       Agent        Agent      │ open gaps found?
+       ▲                    │         │
+       └────────────────────┴─────────┘  yes → targeted follow-up search/read, re-check
+                            │ no
+                            ▼
+                     Synthesis Agent
+                            ▼
      Confidence-Scored Research Report
 ```
 
@@ -49,11 +51,24 @@ FastAPI Backend  ─────────────────  Azure App 
 
 | Agent | Responsibility |
 |---|---|
-| **Orchestrator** | Coordinates pipeline, manages agent handoffs via Foundry IQ |
+| **Orchestrator** | Runs the multi-step reasoning loop — decides whether to search again based on what Fact-Check finds, and manages agent handoffs via Foundry IQ |
 | **Search Agent** | Uses Tavily Search API to find real-time web sources |
 | **Reader Agent** | Fetches and extracts key facts from web pages |
-| **Fact-Check Agent** | Cross-references sources, detects contradictions |
+| **Fact-Check Agent** | Cross-references sources, detects contradictions, and flags evidence **gaps** |
 | **Synthesis Agent** | Produces final report with confidence-scored findings |
+
+### 🧭 Multi-Step Reasoning Loop
+
+The orchestrator doesn't just run the pipeline once and stop. After the
+Fact-Check Agent reports its findings, the orchestrator inspects the
+**Gaps** section: if it identifies an open question the initial sources
+didn't answer, the orchestrator formulates a *targeted follow-up query*,
+sends the Search and Reader Agents out again, merges the new evidence with
+the old (de-duplicated by URL), and re-runs the Fact-Check Agent — before
+finally handing everything to Synthesis. This loop is capped by
+`MAX_RESEARCH_ROUNDS` (default 2) so the agent always converges on a report,
+while still demonstrating genuine "notice what I don't know → go find it"
+reasoning rather than a fixed, one-shot pipeline.
 
 ---
 
