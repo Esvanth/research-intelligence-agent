@@ -81,7 +81,8 @@ class SynthesisAgent(BaseAgent):
                 f"Fact-check report:\n{fact_check_report}\n\n"
                 f"Sources:\n{sources_list}\n\n"
                 "Produce the final structured research report."
-            )
+            ),
+            max_tokens=1200,
         )
 
         print(f"\n[SynthesisAgent] Final report generated ({len(final_report)} chars)")

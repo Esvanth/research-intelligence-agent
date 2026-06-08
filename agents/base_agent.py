@@ -27,7 +27,7 @@ class BaseAgent(ABC):
             credential=AzureKeyCredential(config.AZURE_API_KEY),
         )
 
-    def chat(self, user_message: str, extra_context: str = "") -> str:
+    def chat(self, user_message: str, extra_context: str = "", max_tokens: int = 1500) -> str:
         messages = [SystemMessage(content=self.instructions)]
         if extra_context:
             messages.append(SystemMessage(content=f"Additional context:\n{extra_context}"))
@@ -37,7 +37,7 @@ class BaseAgent(ABC):
             model=config.MODEL_DEPLOYMENT,
             messages=messages,
             temperature=0.3,
-            max_tokens=1500,
+            max_tokens=max_tokens,
         )
         content = response.choices[0].message.content or ""
         content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)

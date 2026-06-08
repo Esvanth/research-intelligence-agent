@@ -52,8 +52,9 @@ class ReaderAgent(BaseAgent):
                     f"Research query: {query}\n\n"
                     f"Source title: {page['title']}\n"
                     f"Source content:\n{page['content']}\n\n"
-                    "Extract the key information relevant to the query."
-                )
+                    "Extract the key information relevant to the query. Be concise."
+                ),
+                max_tokens=500,
             )
 
             extracted_info.append({

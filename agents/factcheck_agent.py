@@ -69,8 +69,9 @@ class FactCheckAgent(BaseAgent):
                 f"Research query: {query}\n\n"
                 f"Information from {len(extracted_info)} sources:\n\n"
                 f"{combined}\n\n"
-                "Cross-reference these sources and produce your fact-check report."
-            )
+                "Cross-reference these sources and produce your fact-check report. Be concise."
+            ),
+            max_tokens=500,
         )
 
         # Detect if contradictions were found (for demo highlighting)
